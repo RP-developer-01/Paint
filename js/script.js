@@ -1,43 +1,72 @@
-const canvas = document.getElementById("canvas");
-const color_input = document.getElementById("color-input");
+const canvas = document.querySelector("canvas");
+const ctx = canvas.getContext("2d");
+const brushWidth = document.querySelector("#brush-width");
+const brushSize = document.querySelector("#brush-size");
+const brushColor = document.querySelector("#color-picker");
+const brush = document.querySelector(".brush");
+const eraser = document.querySelector(".eraser");
+const clearBtn = document.querySelector(".clear");
+const saveBtn = document.querySelector(".save");
 
-const ctx = canvas.getContext('2d');
-
-let x, y;
-let isPressed = false;
-let lineColor = 'black';
-
-canvas.addEventListener("mousedown", (event) => {
-    isPressed = true;
-
-    x = event.offsetX;
-    y = event.offsetY;
+let isDrawing = false;
+let currentWidth = 5;
+let currentColor = "";
+canvas.addEventListener("mousemove", drawing);
+canvas.addEventListener("mousedown", startDraw);
+canvas.addEventListener("mouseup", endDraw);
+brushWidth.addEventListener("change", () => {
+  currentWidth = brushWidth.value;
+  brushSize.innerText = `size ${brushWidth.value}`;
+});
+brushColor.addEventListener("change", () => {
+  currentColor = brushColor.value;
 });
 
-canvas.addEventListener("mouseup", (event) => {
-    isPressed = false;
-
-    x = undefined;
-    y = undefined;
+brush.addEventListener("click", () => {
+  brush.classList.add("active");
+  eraser.classList.remove("active");
+  canvas.classList.add("active-brush");
+  canvas.classList.remove("active-erase");
+  currentColor = brushColor.value;
+});
+eraser.addEventListener("click", () => {
+  eraser.classList.add("active");
+  brush.classList.remove("active");
+  canvas.classList.add("active-erase");
+  currentColor = "#ffff";
 });
 
-canvas.addEventListener("mousemove", (event) => {
-    if(isPressed) {
-        drawLine(x, y, event.offsetX, event.offsetY);
-        x = event.offsetX;
-        y = event.offsetY;
-    }
+clearBtn.addEventListener("click", () => {
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 });
 
-color_input.addEventListener("change", (e) => {
-    lineColor = e.target.value;
+saveBtn.addEventListener("click", () => {
+  let link = document.createElement("a");
+  link.download = `${Date.now()}.jpg`;
+  link.href = canvas.toDataURL();
+  link.click();
 });
 
-function drawLine(x1, y1, x2, y2) {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 5;
-    ctx.stroke();
+window.addEventListener("load", () => {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  ctx.fillStyle = "#ffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+});
+
+function drawing(e) {
+  if (!isDrawing) return;
+  ctx.lineTo(e.offsetX, e.offsetY);
+  ctx.stroke();
+  ctx.strokeStyle = `${currentColor}`;
+}
+
+function startDraw() {
+  isDrawing = true;
+  ctx.beginPath();
+  ctx.lineWidth = currentWidth;
+}
+
+function endDraw() {
+  isDrawing = false;
 }
